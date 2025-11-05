@@ -1,9 +1,10 @@
-const { E2B } = require("e2b");
+// Converter para ES Modules para compatibilidade com Next.js
+import { E2B } from "e2b";
 
 // Inicializar cliente E2B
 const e2b = new E2B(process.env.E2B_API_KEY);
 
-async function createNodejsSandbox() {
+export async function createNodejsSandbox() {
   try {
     const sandbox = await e2b.createSandbox("nodejs");
     console.log("Novo sandbox ID:", sandbox.id);
@@ -14,7 +15,7 @@ async function createNodejsSandbox() {
   }
 }
 
-async function connectToSandbox(sandboxId) {
+export async function connectToSandbox(sandboxId) {
   try {
     const sandbox = await e2b.connectSandbox(sandboxId);
     console.log("Conectado ao sandbox:", sandboxId);
@@ -25,7 +26,7 @@ async function connectToSandbox(sandboxId) {
   }
 }
 
-async function connectOrCreateSandbox(sandboxId) {
+export async function connectOrCreateSandbox(sandboxId) {
   let sandbox;
   try {
     // Tentar conectar ao sandbox existente
@@ -44,20 +45,7 @@ async function connectOrCreateSandbox(sandboxId) {
   return sandbox;
 }
 
-// Exportar as funções para uso em outros arquivos
-module.exports = {
-  createNodejsSandbox,
-  connectToSandbox,
-  connectOrCreateSandbox
-};
-
-// Executar se for chamado diretamente
-if (require.main === module) {
-  createNodejsSandbox()
-    .then(sandbox => {
-      console.log("Sandbox pronto para uso!");
-    })
-    .catch(error => {
-      console.error("Falha na criação do sandbox:", error);
-    });
+// Função para verificar se a API key está configurada
+export function checkE2BConfig() {
+  return !!process.env.E2B_API_KEY;
 }

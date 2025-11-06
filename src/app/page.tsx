@@ -1,5 +1,5 @@
-import E2BSandboxDemo from '@/components/E2BSandboxDemo'
+import TelegramMiniApp from '@/components/TelegramMiniApp'
 
 export default function Home() {
-  return <E2BSandboxDemo />
+  return <TelegramMiniApp />
 }

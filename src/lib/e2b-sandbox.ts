@@ -1,24 +1,56 @@
-// Arquivo TypeScript para compatibilidade com Next.js
-import { E2B } from "e2b";
+// Implementação mock para demonstração - compatível com browser
+// Em produção, essas chamadas devem ser feitas via API routes do Next.js
 
-// Inicializar cliente E2B
-const e2b = new E2B(process.env.E2B_API_KEY);
+interface MockSandbox {
+  id: string;
+  status: 'active' | 'creating' | 'stopped';
+  createdAt: Date;
+}
 
-export async function createNodejsSandbox() {
+// Simular delay de rede
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Gerar ID aleatório para sandbox
+const generateSandboxId = () => {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+};
+
+export async function createNodejsSandbox(): Promise<MockSandbox> {
   try {
-    const sandbox = await e2b.createSandbox("nodejs");
-    console.log("Novo sandbox ID:", sandbox.id);
+    // Simular criação de sandbox
+    await delay(2000); // Simular delay de criação
+    
+    const sandbox: MockSandbox = {
+      id: generateSandboxId(),
+      status: 'active',
+      createdAt: new Date()
+    };
+    
+    console.log("Novo sandbox criado (mock):", sandbox.id);
     return sandbox;
   } catch (error) {
     console.error("Erro ao criar sandbox:", error);
-    throw error;
+    throw new Error("Falha ao criar sandbox. Verifique sua configuração E2B.");
   }
 }
 
-export async function connectToSandbox(sandboxId: string) {
+export async function connectToSandbox(sandboxId: string): Promise<MockSandbox> {
   try {
-    const sandbox = await e2b.connectSandbox(sandboxId);
-    console.log("Conectado ao sandbox:", sandboxId);
+    // Simular conexão
+    await delay(1500);
+    
+    // Simular sandbox não encontrado para alguns IDs
+    if (sandboxId.length < 10) {
+      throw new Error(`Sandbox '${sandboxId}' wasn't found`);
+    }
+    
+    const sandbox: MockSandbox = {
+      id: sandboxId,
+      status: 'active',
+      createdAt: new Date(Date.now() - 3600000) // 1 hora atrás
+    };
+    
+    console.log("Conectado ao sandbox (mock):", sandboxId);
     return sandbox;
   } catch (error) {
     console.error("Erro ao conectar ao sandbox:", error);
@@ -26,26 +58,32 @@ export async function connectToSandbox(sandboxId: string) {
   }
 }
 
-export async function connectOrCreateSandbox(sandboxId: string) {
-  let sandbox;
+export async function connectOrCreateSandbox(sandboxId: string): Promise<MockSandbox> {
   try {
     // Tentar conectar ao sandbox existente
-    sandbox = await e2b.connectSandbox(sandboxId);
-    console.log("Conectado ao sandbox existente:", sandboxId);
+    const sandbox = await connectToSandbox(sandboxId);
+    console.log("Conectado ao sandbox existente (mock):", sandboxId);
+    return sandbox;
   } catch (err: any) {
     // Se não encontrar, criar um novo
     if (err.message && err.message.includes("wasn't found")) {
-      console.log("Sandbox não encontrado, criando novo...");
-      sandbox = await e2b.createSandbox("nodejs");
-      console.log("Novo sandbox criado:", sandbox.id);
+      console.log("Sandbox não encontrado, criando novo (mock)...");
+      const newSandbox = await createNodejsSandbox();
+      console.log("Novo sandbox criado (mock):", newSandbox.id);
+      return newSandbox;
     } else {
       throw err;
     }
   }
-  return sandbox;
 }
 
 // Função para verificar se a API key está configurada
 export function checkE2BConfig(): boolean {
+  // Em um ambiente real, isso verificaria process.env.E2B_API_KEY
+  // Para demo, vamos simular que está configurado
+  if (typeof window !== 'undefined') {
+    // No browser, simular configuração
+    return true;
+  }
   return !!process.env.E2B_API_KEY;
 }

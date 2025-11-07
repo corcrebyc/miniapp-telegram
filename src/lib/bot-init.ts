@@ -1,10 +1,24 @@
-import { createTelegramBot } from '@/lib/telegram-bot'
+// Inicialização condicional do bot do Telegram
+const initBot = async () => {
+  // Só executar no servidor
+  if (typeof window !== 'undefined') {
+    return
+  }
 
-// Inicializar o bot quando o servidor iniciar
-const initBot = () => {
+  // Só executar em desenvolvimento ou se explicitamente configurado
+  if (process.env.NODE_ENV === 'production' && !process.env.ENABLE_TELEGRAM_BOT) {
+    console.log('🤖 Bot do Telegram desabilitado em produção (use ENABLE_TELEGRAM_BOT=true para habilitar)')
+    return
+  }
+
   if (process.env.TELEGRAM_BOT_TOKEN) {
-    console.log('🚀 Inicializando bot do Telegram...')
-    createTelegramBot()
+    try {
+      console.log('🚀 Inicializando bot do Telegram...')
+      const { createTelegramBot } = await import('@/lib/telegram-bot')
+      createTelegramBot()
+    } catch (error) {
+      console.error('❌ Erro ao inicializar bot do Telegram:', error)
+    }
   } else {
     console.warn('⚠️ TELEGRAM_BOT_TOKEN não configurado. Bot não será iniciado.')
     console.log('📝 Para configurar o bot:')
@@ -14,8 +28,8 @@ const initBot = () => {
   }
 }
 
-// Inicializar apenas no servidor (não no build)
-if (typeof window === 'undefined' && process.env.NODE_ENV !== 'production') {
+// Inicializar apenas no servidor
+if (typeof window === 'undefined') {
   initBot()
 }
 

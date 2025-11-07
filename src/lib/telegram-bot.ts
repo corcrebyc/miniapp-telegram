@@ -1,4 +1,14 @@
-import TelegramBot from 'node-telegram-bot-api'
+// Importação condicional para evitar erros no build
+let TelegramBot: any = null
+
+// Só importar no servidor
+if (typeof window === 'undefined') {
+  try {
+    TelegramBot = require('node-telegram-bot-api')
+  } catch (error) {
+    console.warn('node-telegram-bot-api não disponível:', error)
+  }
+}
 
 // Configuração do bot
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || ''
@@ -93,6 +103,11 @@ const getUserSession = (userId: string) => {
 
 // Função para criar o bot
 export const createTelegramBot = () => {
+  if (!TelegramBot) {
+    console.warn('TelegramBot não disponível (provavelmente executando no cliente)')
+    return null
+  }
+
   if (!BOT_TOKEN) {
     console.error('TELEGRAM_BOT_TOKEN não configurado!')
     return null
@@ -101,7 +116,7 @@ export const createTelegramBot = () => {
   const bot = new TelegramBot(BOT_TOKEN, { polling: true })
 
   // Comando /start
-  bot.onText(/\/start/, (msg) => {
+  bot.onText(/\/start/, (msg: any) => {
     const chatId = msg.chat.id
     const session = getUserSession(chatId.toString())
     
@@ -125,23 +140,23 @@ Escolha um modelo para começar a conversar! ✨
   })
 
   // Comando /modelos
-  bot.onText(/\/modelos/, (msg) => {
+  bot.onText(/\/modelos/, (msg: any) => {
     const chatId = msg.chat.id
     
-    let modelsList = '*🎭 Modelos Disponíveis:*\n\n'
+    let modelsList = '*🎭 Modelos Disponíveis:*\\n\\n'
     
     virtualModels.forEach((model, index) => {
-      modelsList += `${model.emoji} *${model.name}*\n`
-      modelsList += `${model.description}\n`
-      modelsList += `💰 ${model.price} créditos/mensagem\n`
-      modelsList += `/escolher${model.id} - Conversar com ${model.name}\n\n`
+      modelsList += `${model.emoji} *${model.name}*\\n`
+      modelsList += `${model.description}\\n`
+      modelsList += `💰 ${model.price} créditos/mensagem\\n`
+      modelsList += `/escolher${model.id} - Conversar com ${model.name}\\n\\n`
     })
 
     bot.sendMessage(chatId, modelsList, { parse_mode: 'Markdown' })
   })
 
   // Comando /creditos
-  bot.onText(/\/creditos/, (msg) => {
+  bot.onText(/\/creditos/, (msg: any) => {
     const chatId = msg.chat.id
     const session = getUserSession(chatId.toString())
     
@@ -160,7 +175,7 @@ Use /comprar para adquirir mais créditos!
   })
 
   // Comando /comprar
-  bot.onText(/\/comprar/, (msg) => {
+  bot.onText(/\/comprar/, (msg: any) => {
     const chatId = msg.chat.id
     
     const buyMessage = `
@@ -177,7 +192,7 @@ Use /comprar para adquirir mais créditos!
   })
 
   // Comandos de compra
-  bot.onText(/\/comprar(\d+)/, (msg, match) => {
+  bot.onText(/\/comprar(\d+)/, (msg: any, match: any) => {
     const chatId = msg.chat.id
     const session = getUserSession(chatId.toString())
     const amount = parseInt(match![1])
@@ -199,7 +214,7 @@ Obrigado pela compra! Agora você pode conversar mais com seus modelos favoritos
 
   // Comandos para escolher modelos
   virtualModels.forEach(model => {
-    bot.onText(new RegExp(`/escolher${model.id}`), (msg) => {
+    bot.onText(new RegExp(`/escolher${model.id}`), (msg: any) => {
       const chatId = msg.chat.id
       const session = getUserSession(chatId.toString())
       
@@ -223,7 +238,7 @@ Para trocar de modelo, use /modelos
   })
 
   // Comando /ajuda
-  bot.onText(/\/ajuda/, (msg) => {
+  bot.onText(/\/ajuda/, (msg: any) => {
     const chatId = msg.chat.id
     
     const helpMessage = `
@@ -249,7 +264,7 @@ Para trocar de modelo, use /modelos
   })
 
   // Processar mensagens normais (conversas com modelos)
-  bot.on('message', (msg) => {
+  bot.on('message', (msg: any) => {
     const chatId = msg.chat.id
     const userId = chatId.toString()
     const text = msg.text
@@ -274,7 +289,7 @@ Para trocar de modelo, use /modelos
 
     // Verificar créditos
     if (session.credits < selectedModel.price) {
-      bot.sendMessage(chatId, `❌ Créditos insuficientes! Você precisa de ${selectedModel.price} créditos para conversar com ${selectedModel.name}.\n\nUse /comprar para adquirir mais créditos.`)
+      bot.sendMessage(chatId, `❌ Créditos insuficientes! Você precisa de ${selectedModel.price} créditos para conversar com ${selectedModel.name}.\\n\\nUse /comprar para adquirir mais créditos.`)
       return
     }
 
@@ -288,7 +303,7 @@ Para trocar de modelo, use /modelos
     bot.sendChatAction(chatId, 'typing')
     
     setTimeout(() => {
-      bot.sendMessage(chatId, `${selectedModel.emoji} *${selectedModel.name}:*\n\n${response}\n\n💰 Créditos restantes: ${session.credits}`, { parse_mode: 'Markdown' })
+      bot.sendMessage(chatId, `${selectedModel.emoji} *${selectedModel.name}:*\\n\\n${response}\\n\\n💰 Créditos restantes: ${session.credits}`, { parse_mode: 'Markdown' })
     }, 1000 + Math.random() * 2000)
 
     // Atualizar última atividade
@@ -296,7 +311,7 @@ Para trocar de modelo, use /modelos
   })
 
   // Tratamento de erros
-  bot.on('error', (error) => {
+  bot.on('error', (error: any) => {
     console.error('Erro no bot do Telegram:', error)
   })
 
